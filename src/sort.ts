@@ -33,38 +33,91 @@ export function sortKeysShallow(value: unknown): unknown {
   return value;
 }
 
+export interface SortOptions {
+  sortFrom: number;
+  sortOrder?: string[];
+}
+
 /**
- * Sorts keys starting from a specific depth.
+ * Sorts keys starting from a specific depth with optional custom order.
  * @param value - The JSON value to sort
- * @param sortFrom - Depth to start sorting from (0 = root, 1 = first level children, etc.)
+ * @param options - Sort options (sortFrom, sortOrder)
  * @param currentDepth - Current depth (used internally for recursion)
  */
 export function sortKeysFromDepth(
   value: unknown,
-  sortFrom: number,
+  options: SortOptions | number,
   currentDepth: number = 0
 ): unknown {
+  // Support legacy signature (sortFrom as number)
+  const { sortFrom, sortOrder } =
+    typeof options === "number" ? { sortFrom: options, sortOrder: undefined } : options;
+
   if (Array.isArray(value)) {
-    return value.map((item) => sortKeysFromDepth(item, sortFrom, currentDepth));
+    return value.map((item) =>
+      sortKeysFromDepth(item, { sortFrom, sortOrder: undefined }, currentDepth)
+    );
   }
 
   if (value !== null && typeof value === "object") {
     const entries = Object.entries(value);
 
-    // Sort entries if we're at or past the sortFrom depth
-    const processedEntries = currentDepth >= sortFrom
-      ? entries.sort(([a], [b]) => a.localeCompare(b))
-      : entries;
+    let processedEntries: [string, unknown][];
+
+    if (currentDepth >= sortFrom) {
+      // Use custom sort order at root level (depth 0) if provided
+      if (currentDepth === 0 && sortOrder && sortOrder.length > 0) {
+        processedEntries = sortEntriesWithCustomOrder(entries, sortOrder);
+      } else {
+        processedEntries = entries.sort(([a], [b]) => a.localeCompare(b));
+      }
+    } else {
+      processedEntries = entries;
+    }
 
     return Object.fromEntries(
       processedEntries.map(([key, val]) => [
         key,
-        sortKeysFromDepth(val, sortFrom, currentDepth + 1),
+        sortKeysFromDepth(val, { sortFrom, sortOrder: undefined }, currentDepth + 1),
       ])
     );
   }
 
   return value;
+}
+
+/**
+ * Sorts entries with custom key order.
+ * Keys in sortOrder come first in that order, remaining keys are sorted alphabetically.
+ */
+function sortEntriesWithCustomOrder(
+  entries: [string, unknown][],
+  sortOrder: string[]
+): [string, unknown][] {
+  const orderMap = new Map(sortOrder.map((key, index) => [key, index]));
+
+  return entries.sort(([a], [b]) => {
+    const aIndex = orderMap.get(a);
+    const bIndex = orderMap.get(b);
+
+    // Both in sortOrder: sort by order index
+    if (aIndex !== undefined && bIndex !== undefined) {
+      return aIndex - bIndex;
+    }
+
+    // Only a in sortOrder: a comes first
+    if (aIndex !== undefined) {
+      return -1;
+    }
+
+    // Only b in sortOrder: b comes first
+    if (bIndex !== undefined) {
+      return 1;
+    }
+
+    // Neither in sortOrder: sort alphabetically
+    return a.localeCompare(b);
+  });
 }
 
 /**

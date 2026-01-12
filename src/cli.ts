@@ -39,6 +39,7 @@ interface ProcessOptions {
   indent: number;
   tabs: boolean;
   sortFrom: number;
+  sortOrder?: string[];
 }
 
 interface Result {
@@ -206,8 +207,11 @@ async function processFile(
       };
     }
 
-    // Sort keys with sortFrom depth
-    const sorted = sortKeysFromDepth(parsed, options.sortFrom);
+    // Sort keys with sortFrom depth and optional custom order
+    const sorted = sortKeysFromDepth(parsed, {
+      sortFrom: options.sortFrom,
+      sortOrder: options.sortOrder,
+    });
 
     // Format
     const formatted = formatJson(sorted, {
@@ -253,7 +257,7 @@ function printResult(
   result: Result,
   quiet: boolean,
   verbose: boolean,
-  verboseInfo?: { sortFrom: number; matchedPattern?: string }
+  verboseInfo?: { sortFrom: number; sortOrder?: string[]; matchedPattern?: string }
 ): void {
   if (quiet && result.status === "success") {
     return;
@@ -272,7 +276,8 @@ function printResult(
     const configSource = verboseInfo.matchedPattern
       ? `pattern: "${verboseInfo.matchedPattern}"`
       : "default";
-    message += ` \x1b[90m[sortFrom=${verboseInfo.sortFrom}, ${configSource}]\x1b[0m`;
+    const sortOrderInfo = verboseInfo.sortOrder ? ", sortOrder" : "";
+    message += ` \x1b[90m[sortFrom=${verboseInfo.sortFrom}${sortOrderInfo}, ${configSource}]\x1b[0m`;
   }
 
   console.log(`${icon} ${result.file}${message}`);
@@ -340,12 +345,14 @@ async function main(): Promise<void> {
       indent: options.indent,
       tabs: options.tabs,
       sortFrom,
+      sortOrder: fileConfig.sortOrder,
     };
 
     const result = await processFile(file, processOptions);
     results.push(result);
     printResult(result, options.quiet, options.verbose, {
       sortFrom,
+      sortOrder: fileConfig.sortOrder,
       matchedPattern: fileConfig.matchedPattern,
     });
   }

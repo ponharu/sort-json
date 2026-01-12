@@ -19,6 +19,12 @@ export const FileConfigSchema = Type.Object(
         description: "Whether to ignore files matching this pattern",
       })
     ),
+    sortOrder: Type.Optional(
+      Type.Array(Type.String(), {
+        description:
+          "Custom key order for root level. Keys not in list are sorted alphabetically after.",
+      })
+    ),
   },
   { additionalProperties: false }
 );

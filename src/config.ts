@@ -78,18 +78,23 @@ function mergeWithDefaults(config: Config): Config {
   };
 }
 
+export interface FileConfigResult {
+  sortFrom: number;
+  ignore: boolean;
+  sortOrder?: string[];
+  matchedPattern?: string;
+}
+
 /**
  * Gets the effective config for a specific file.
  * When multiple patterns match, the most specific one wins.
  */
-export function getFileConfig(
-  filePath: string,
-  config: Config
-): { sortFrom: number; ignore: boolean; matchedPattern?: string } {
-  const baseConfig = {
+export function getFileConfig(filePath: string, config: Config): FileConfigResult {
+  const baseConfig: FileConfigResult = {
     sortFrom: config.sortFrom ?? DEFAULT_CONFIG.sortFrom,
     ignore: false,
-    matchedPattern: undefined as string | undefined,
+    sortOrder: undefined,
+    matchedPattern: undefined,
   };
 
   if (!config.files) {
@@ -124,6 +129,7 @@ export function getFileConfig(
   return {
     sortFrom: bestMatch.config.sortFrom ?? baseConfig.sortFrom,
     ignore: bestMatch.config.ignore ?? false,
+    sortOrder: bestMatch.config.sortOrder,
     matchedPattern: bestMatch.pattern,
   };
 }

@@ -50,6 +50,13 @@
               "default": false,
               "description": "Whether to ignore files matching this pattern",
               "type": "boolean"
+            },
+            "sortOrder": {
+              "description": "Custom key order for root level. Keys not in list are sorted alphabetically after.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
