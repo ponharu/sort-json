@@ -62,13 +62,11 @@ export function sortKeysFromDepth(
 
     let processedEntries: [string, unknown][];
 
-    if (currentDepth >= sortFrom) {
-      // Use custom sort order at root level (depth 0) if provided
-      if (currentDepth === 0 && sortOrder && sortOrder.length > 0) {
-        processedEntries = sortEntriesWithCustomOrder(entries, sortOrder);
-      } else {
-        processedEntries = entries.toSorted(([a], [b]) => a.localeCompare(b));
-      }
+    // Apply custom sortOrder at root level regardless of sortFrom
+    if (currentDepth === 0 && sortOrder && sortOrder.length > 0) {
+      processedEntries = sortEntriesWithCustomOrder(entries, sortOrder);
+    } else if (currentDepth >= sortFrom) {
+      processedEntries = entries.toSorted(([a], [b]) => a.localeCompare(b));
     } else {
       processedEntries = entries;
     }
