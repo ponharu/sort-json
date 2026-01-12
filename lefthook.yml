@@ -1,15 +1,19 @@
 pre-commit:
   parallel: true
   commands:
-    oxfmt:
-      glob: "*.{js,jsx,ts,tsx,css,md}"
-      run: bun x oxfmt {staged_files} --write
+    generate-schema:
+      run: bun run generate:schema
       stage_fixed: true
 
     sort-json:
       glob: "*.json"
       exclude: "package-lock.json|bun.lock"
       run: bun run ./src/cli.ts {staged_files}
+      stage_fixed: true
+
+    oxfmt:
+      glob: "*.{js,jsx,ts,tsx,css,md}"
+      run: bun x oxfmt {staged_files} --write
       stage_fixed: true
 
     oxlint:

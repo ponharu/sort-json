@@ -9,58 +9,58 @@
       "description": "JSON Schema URL",
       "type": "string"
     },
-    "files": {
-      "description": "Per-file configuration overrides (glob pattern -> config)",
-      "patternProperties": {
-        "^(.*)$": {
-          "additionalProperties": false,
-          "properties": {
-            "ignore": {
-              "default": false,
-              "description": "Whether to ignore files matching this pattern",
-              "type": "boolean"
-            },
-            "sortFrom": {
-              "description": "Depth to start sorting from for this file pattern",
-              "minimum": 0,
-              "type": "integer"
-            },
-            "sortOrder": {
-              "description": "Custom key order for root level. Keys not in list are sorted alphabetically after.",
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
-        }
-      },
-      "type": "object"
-    },
-    "ignore": {
-      "default": [],
-      "description": "Glob patterns for files to ignore",
-      "items": {
-        "type": "string"
-      },
-      "type": "array"
-    },
     "include": {
       "default": [
         "**/*.json"
       ],
       "description": "Glob patterns for files to include",
+      "type": "array",
       "items": {
         "type": "string"
-      },
-      "type": "array"
+      }
+    },
+    "ignore": {
+      "default": [],
+      "description": "Glob patterns for files to ignore",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "sortFrom": {
+      "minimum": 0,
       "default": 1,
       "description": "Depth to start sorting from (0 = root, 1 = first level children, etc.)",
-      "minimum": 0,
       "type": "integer"
+    },
+    "files": {
+      "description": "Per-file configuration overrides (glob pattern -> config)",
+      "type": "object",
+      "patternProperties": {
+        "^(.*)$": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "sortFrom": {
+              "minimum": 0,
+              "description": "Depth to start sorting from for this file pattern",
+              "type": "integer"
+            },
+            "ignore": {
+              "default": false,
+              "description": "Whether to ignore files matching this pattern",
+              "type": "boolean"
+            },
+            "sortOrder": {
+              "description": "Custom key order for root level. Keys not in list are sorted alphabetically after.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
