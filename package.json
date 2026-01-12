@@ -1,0 +1,61 @@
+{
+  "author": "ponharu",
+  "bin": {
+    "sort-json": "./dist/cli.js"
+  },
+  "bugs": {
+    "url": "https://github.com/ponharu/sort-json/issues"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.3"
+  },
+  "description": "Fast JSON key sorter - Bun-optimized, Node.js compatible",
+  "devDependencies": {
+    "@types/bun": "^1.2.4",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "bun": ">=1.0",
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/ponharu/sort-json#readme",
+  "keywords": [
+    "json",
+    "sort",
+    "formatter",
+    "cli",
+    "bun",
+    "fast",
+    "lint",
+    "lefthook",
+    "husky"
+  ],
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "name": "@ponharu/sort-json",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ponharu/sort-json.git"
+  },
+  "scripts": {
+    "build": "bun build ./src/cli.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build:types": "bun x tsc --emitDeclarationOnly --declaration --outDir dist",
+    "dev": "bun run ./src/cli.ts",
+    "prepublishOnly": "bun run build",
+    "test": "bun test",
+    "typecheck": "bun x tsc --noEmit"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
+}
