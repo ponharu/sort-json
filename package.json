@@ -1,7 +1,7 @@
 {
   "author": "ponharu",
   "bin": {
-    "sort-json": "./dist/cli.js"
+    "sort-json": "dist/cli.js"
   },
   "bugs": {
     "url": "https://github.com/ponharu/sort-json/issues"
