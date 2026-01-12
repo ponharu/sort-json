@@ -29,7 +29,7 @@
     },
     "sortFrom": {
       "minimum": 0,
-      "default": 1,
+      "default": 0,
       "description": "Depth to start sorting from (0 = root, 1 = first level children, etc.)",
       "type": "integer"
     },

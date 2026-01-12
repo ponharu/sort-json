@@ -24,6 +24,7 @@ interface Options {
   indent: number;
   tabs: boolean;
   quiet: boolean;
+  verbose: boolean;
   help: boolean;
   version: boolean;
   ignore: string[];
@@ -68,6 +69,7 @@ Options:
   --ignore <pattern>   Ignore files matching pattern (can be used multiple times)
   --no-gitignore       Don't respect .gitignore file
   -q, --quiet          Suppress output
+  --verbose            Show detailed information (applied config per file)
   -h, --help           Show this help message
   -v, --version        Show version
 
@@ -75,7 +77,7 @@ Config file (.sortjsonrc.json):
   {
     "include": ["**/*.json"],
     "ignore": ["drizzle/migrations/**"],
-    "sortFrom": 1,
+    "sortFrom": 0,
     "files": {
       "package.json": { "sortFrom": 1 },
       "data/**/*.json": { "sortFrom": 0 }
@@ -87,6 +89,7 @@ Examples:
   sort-json config.json              # Sort specific file
   sort-json "**/*.json"              # Sort all JSON files
   sort-json --check "src/**/*.json"  # Check if files are sorted
+  sort-json --verbose                # Show which config is applied
 `);
 }
 
@@ -98,6 +101,7 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
     indent: 2,
     tabs: false,
     quiet: false,
+    verbose: false,
     help: false,
     version: false,
     ignore: [],
@@ -148,6 +152,9 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
       case "-q":
       case "--quiet":
         options.quiet = true;
+        break;
+      case "--verbose":
+        options.verbose = true;
         break;
       case "-h":
       case "--help":
@@ -242,7 +249,12 @@ async function processFile(
   }
 }
 
-function printResult(result: Result, quiet: boolean): void {
+function printResult(
+  result: Result,
+  quiet: boolean,
+  verbose: boolean,
+  verboseInfo?: { sortFrom: number; matchedPattern?: string }
+): void {
   if (quiet && result.status === "success") {
     return;
   }
@@ -254,7 +266,15 @@ function printResult(result: Result, quiet: boolean): void {
     changed: "\x1b[31m✗\x1b[0m",
   }[result.status];
 
-  const message = result.message ? ` (${result.message})` : "";
+  let message = result.message ? ` (${result.message})` : "";
+
+  if (verbose && verboseInfo) {
+    const configSource = verboseInfo.matchedPattern
+      ? `pattern: "${verboseInfo.matchedPattern}"`
+      : "default";
+    message += ` \x1b[90m[sortFrom=${verboseInfo.sortFrom}, ${configSource}]\x1b[0m`;
+  }
+
   console.log(`${icon} ${result.file}${message}`);
 }
 
@@ -276,7 +296,8 @@ async function main(): Promise<void> {
   const config: Config = await loadConfig();
 
   // Determine patterns: CLI args override config
-  const patterns = cliPatterns.length > 0 ? cliPatterns : config.include ?? ["**/*.json"];
+  const patterns =
+    cliPatterns.length > 0 ? cliPatterns : config.include ?? ["**/*.json"];
 
   // Combine ignore patterns: CLI + config
   const ignorePatterns = [...options.ignore, ...(config.ignore ?? [])];
@@ -289,7 +310,9 @@ async function main(): Promise<void> {
 
   if (files.length === 0) {
     if (cliPatterns.length === 0) {
-      console.error("Error: No files found. Create .sortjsonrc.json or specify files.");
+      console.error(
+        "Error: No files found. Create .sortjsonrc.json or specify files."
+      );
     } else {
       console.error("Error: No files found matching the patterns");
     }
@@ -321,7 +344,10 @@ async function main(): Promise<void> {
 
     const result = await processFile(file, processOptions);
     results.push(result);
-    printResult(result, options.quiet);
+    printResult(result, options.quiet, options.verbose, {
+      sortFrom,
+      matchedPattern: fileConfig.matchedPattern,
+    });
   }
 
   // Summary
@@ -335,7 +361,8 @@ async function main(): Promise<void> {
     const parts: string[] = [];
     if (successCount > 0) parts.push(`${successCount} sorted`);
     if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
-    if (errorCount > 0) parts.push(`${errorCount} error${errorCount > 1 ? "s" : ""}`);
+    if (errorCount > 0)
+      parts.push(`${errorCount} error${errorCount > 1 ? "s" : ""}`);
     if (changedCount > 0) parts.push(`${changedCount} not sorted`);
     console.log(parts.join(", "));
   }

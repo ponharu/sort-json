@@ -45,7 +45,7 @@ export const ConfigSchema = Type.Object(
     sortFrom: Type.Optional(
       Type.Integer({
         minimum: 0,
-        default: 1,
+        default: 0,
         description:
           "Depth to start sorting from (0 = root, 1 = first level children, etc.)",
       })

@@ -2,15 +2,18 @@
  * Configuration file handling for sort-json
  */
 
+import { Value } from "@sinclair/typebox/value";
 import { readFile } from "./io.js";
-import type { Config, FileConfig } from "./schema.js";
+import { ConfigSchema, type Config, type FileConfig } from "./schema.js";
 
 export type { Config, FileConfig };
 
-export const DEFAULT_CONFIG: Required<Omit<Config, "$schema" | "files">> & { files: Record<string, FileConfig> } = {
+export const DEFAULT_CONFIG: Required<Omit<Config, "$schema" | "files">> & {
+  files: Record<string, FileConfig>;
+} = {
   include: ["**/*.json"],
   ignore: [],
-  sortFrom: 1,
+  sortFrom: 0,
   files: {},
 };
 
@@ -20,6 +23,16 @@ const CONFIG_FILE_NAMES = [
   "sortjson.config.json",
 ];
 
+export class ConfigValidationError extends Error {
+  constructor(
+    message: string,
+    public errors: Array<{ path: string; message: string }>
+  ) {
+    super(message);
+    this.name = "ConfigValidationError";
+  }
+}
+
 /**
  * Loads configuration from file or returns defaults
  */
@@ -27,10 +40,26 @@ export async function loadConfig(): Promise<Config> {
   for (const fileName of CONFIG_FILE_NAMES) {
     try {
       const content = await readFile(fileName);
-      const config = JSON.parse(content) as Config;
-      return mergeWithDefaults(config);
-    } catch {
-      // File not found or invalid, try next
+      const parsed = JSON.parse(content);
+
+      // Validate with TypeBox
+      if (!Value.Check(ConfigSchema, parsed)) {
+        const errors = [...Value.Errors(ConfigSchema, parsed)].map((e) => ({
+          path: e.path,
+          message: e.message,
+        }));
+        throw new ConfigValidationError(
+          `Invalid config in ${fileName}: ${errors[0]?.message ?? "unknown error"}`,
+          errors
+        );
+      }
+
+      return mergeWithDefaults(parsed);
+    } catch (e) {
+      if (e instanceof ConfigValidationError) {
+        throw e;
+      }
+      // File not found or JSON parse error, try next
       continue;
     }
   }
@@ -50,29 +79,81 @@ function mergeWithDefaults(config: Config): Config {
 }
 
 /**
- * Gets the effective config for a specific file
+ * Gets the effective config for a specific file.
+ * When multiple patterns match, the most specific one wins.
  */
-export function getFileConfig(filePath: string, config: Config): { sortFrom: number; ignore: boolean } {
+export function getFileConfig(
+  filePath: string,
+  config: Config
+): { sortFrom: number; ignore: boolean; matchedPattern?: string } {
   const baseConfig = {
     sortFrom: config.sortFrom ?? DEFAULT_CONFIG.sortFrom,
     ignore: false,
+    matchedPattern: undefined as string | undefined,
   };
 
   if (!config.files) {
     return baseConfig;
   }
 
-  // Check each file pattern
+  // Find all matching patterns and their specificity scores
+  const matches: Array<{
+    pattern: string;
+    config: FileConfig;
+    score: number;
+  }> = [];
+
   for (const [pattern, fileConfig] of Object.entries(config.files)) {
     if (matchesPattern(filePath, pattern)) {
-      return {
-        sortFrom: fileConfig.sortFrom ?? baseConfig.sortFrom,
-        ignore: fileConfig.ignore ?? false,
-      };
+      matches.push({
+        pattern,
+        config: fileConfig,
+        score: getPatternSpecificity(pattern),
+      });
     }
   }
 
-  return baseConfig;
+  if (matches.length === 0) {
+    return baseConfig;
+  }
+
+  // Sort by specificity (highest first) and use the most specific match
+  matches.sort((a, b) => b.score - a.score);
+  const bestMatch = matches[0];
+
+  return {
+    sortFrom: bestMatch.config.sortFrom ?? baseConfig.sortFrom,
+    ignore: bestMatch.config.ignore ?? false,
+    matchedPattern: bestMatch.pattern,
+  };
+}
+
+/**
+ * Calculate pattern specificity score.
+ * Higher score = more specific pattern.
+ */
+function getPatternSpecificity(pattern: string): number {
+  let score = 0;
+
+  // Exact match (no wildcards) is most specific
+  if (!pattern.includes("*")) {
+    score += 1000;
+  }
+
+  // More path segments = more specific
+  score += (pattern.match(/\//g) || []).length * 10;
+
+  // Single * is more specific than **
+  const doubleStarCount = (pattern.match(/\*\*/g) || []).length;
+  const singleStarCount =
+    (pattern.match(/\*/g) || []).length - doubleStarCount * 2;
+  score -= doubleStarCount * 5;
+  score += singleStarCount * 1;
+
+  // Longer patterns tend to be more specific
+  score += pattern.length;
+
+  return score;
 }
 
 /**
@@ -85,11 +166,17 @@ function matchesPattern(filePath: string, pattern: string): boolean {
   }
 
   // Convert glob to regex
-  const regexPattern = pattern
+  let regexPattern = pattern
     .replace(/\./g, "\\.")
     .replace(/\*\*/g, "{{GLOBSTAR}}")
     .replace(/\*/g, "[^/]*")
     .replace(/\{\{GLOBSTAR\}\}/g, ".*");
+
+  // Handle **/ at the start - should match zero or more directories
+  // e.g., **/*.json should match both "foo/bar.json" and "bar.json"
+  if (regexPattern.startsWith(".*/")) {
+    regexPattern = "(.*/)?".concat(regexPattern.slice(3));
+  }
 
   return new RegExp(`^${regexPattern}$`).test(filePath);
 }
