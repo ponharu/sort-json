@@ -1,34 +1,7 @@
 {
-  "author": "ponharu",
-  "bin": {
-    "sort-json": "dist/cli.js"
-  },
-  "bugs": {
-    "url": "https://github.com/ponharu/sort-json/issues"
-  },
-  "dependencies": {
-    "fast-glob": "^3.3.3"
-  },
+  "name": "@ponharu/sort-json",
+  "version": "0.3.0",
   "description": "Fast JSON key sorter - Bun-optimized, Node.js compatible",
-  "devDependencies": {
-    "@types/bun": "^1.2.4",
-    "@types/node": "^22.15.21",
-    "typescript": "^5.8.3"
-  },
-  "engines": {
-    "bun": ">=1.0",
-    "node": ">=18"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "homepage": "https://github.com/ponharu/sort-json#readme",
   "keywords": [
     "json",
     "sort",
@@ -41,21 +14,51 @@
     "husky"
   ],
   "license": "MIT",
-  "main": "./dist/index.js",
-  "name": "@ponharu/sort-json",
+  "author": "ponharu",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ponharu/sort-json.git"
   },
+  "homepage": "https://github.com/ponharu/sort-json#readme",
+  "bugs": {
+    "url": "https://github.com/ponharu/sort-json/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "sort-json": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "schema.json"
+  ],
+  "engines": {
+    "bun": ">=1.0",
+    "node": ">=18"
+  },
   "scripts": {
-    "build": "bun build ./src/cli.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build": "bun run generate:schema && bun build ./src/cli.ts --outdir ./dist --target node --format esm && bun run build:types",
     "build:types": "bun x tsc --emitDeclarationOnly --declaration --outDir dist",
     "dev": "bun run ./src/cli.ts",
+    "generate:schema": "bun run ./scripts/generate-schema.ts",
     "prepublishOnly": "bun run build",
     "test": "bun test",
     "typecheck": "bun x tsc --noEmit"
   },
-  "type": "module",
-  "types": "./dist/index.d.ts",
-  "version": "0.2.0"
+  "dependencies": {
+    "@sinclair/typebox": "0.34.46",
+    "fast-glob": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.4",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
 }

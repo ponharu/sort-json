@@ -34,6 +34,40 @@ export function sortKeysShallow(value: unknown): unknown {
 }
 
 /**
+ * Sorts keys starting from a specific depth.
+ * @param value - The JSON value to sort
+ * @param sortFrom - Depth to start sorting from (0 = root, 1 = first level children, etc.)
+ * @param currentDepth - Current depth (used internally for recursion)
+ */
+export function sortKeysFromDepth(
+  value: unknown,
+  sortFrom: number,
+  currentDepth: number = 0
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortKeysFromDepth(item, sortFrom, currentDepth));
+  }
+
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value);
+
+    // Sort entries if we're at or past the sortFrom depth
+    const processedEntries = currentDepth >= sortFrom
+      ? entries.sort(([a], [b]) => a.localeCompare(b))
+      : entries;
+
+    return Object.fromEntries(
+      processedEntries.map(([key, val]) => [
+        key,
+        sortKeysFromDepth(val, sortFrom, currentDepth + 1),
+      ])
+    );
+  }
+
+  return value;
+}
+
+/**
  * Formats a JSON value with the specified indentation.
  * Always appends a trailing newline.
  */

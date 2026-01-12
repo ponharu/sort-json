@@ -6,14 +6,16 @@
 
 import { readFile, writeFile, expandGlob } from "./io.js";
 import {
-  sortKeys,
-  sortKeysShallow,
+  sortKeysFromDepth,
   formatJson,
   detectJsonc,
   stripComments,
 } from "./sort.js";
+import { loadConfig, getFileConfig, type Config } from "./config.js";
+import { createRequire } from "module";
 
-const VERSION = "0.1.0";
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../package.json");
 
 interface Options {
   check: boolean;
@@ -21,12 +23,21 @@ interface Options {
   force: boolean;
   indent: number;
   tabs: boolean;
-  deep: boolean;
   quiet: boolean;
   help: boolean;
   version: boolean;
   ignore: string[];
   respectGitignore: boolean;
+  sortFrom: number | null;
+}
+
+interface ProcessOptions {
+  check: boolean;
+  write: boolean;
+  force: boolean;
+  indent: number;
+  tabs: boolean;
+  sortFrom: number;
 }
 
 interface Result {
@@ -41,10 +52,11 @@ sort-json v${VERSION}
 Fast JSON key sorter - Bun-optimized, Node.js compatible
 
 Usage:
-  sort-json [options] <files...>
+  sort-json [options] [files...]
 
 Arguments:
   files                JSON files to sort (glob patterns supported)
+                       If not specified, uses 'include' from config file
 
 Options:
   -c, --check          Check if files are sorted (exit 1 if not)
@@ -52,18 +64,29 @@ Options:
   -f, --force          Force processing of JSONC files (comments will be lost)
   -i, --indent <n>     Indentation width (default: 2)
   --tabs               Use tabs for indentation
-  --no-deep            Sort top-level keys only
+  --sort-from <n>      Depth to start sorting from (0=root, 1=children, etc.)
   --ignore <pattern>   Ignore files matching pattern (can be used multiple times)
   --no-gitignore       Don't respect .gitignore file
   -q, --quiet          Suppress output
   -h, --help           Show this help message
   -v, --version        Show version
 
+Config file (.sortjsonrc.json):
+  {
+    "include": ["**/*.json"],
+    "ignore": ["drizzle/migrations/**"],
+    "sortFrom": 1,
+    "files": {
+      "package.json": { "sortFrom": 1 },
+      "data/**/*.json": { "sortFrom": 0 }
+    }
+  }
+
 Examples:
-  sort-json config.json
-  sort-json "**/*.json"
-  sort-json --check "src/**/*.json"
-  sort-json --force tsconfig.json
+  sort-json                          # Uses config file settings
+  sort-json config.json              # Sort specific file
+  sort-json "**/*.json"              # Sort all JSON files
+  sort-json --check "src/**/*.json"  # Check if files are sorted
 `);
 }
 
@@ -74,12 +97,12 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
     force: false,
     indent: 2,
     tabs: false,
-    deep: true,
     quiet: false,
     help: false,
     version: false,
     ignore: [],
     respectGitignore: true,
+    sortFrom: null,
   };
   const files: string[] = [];
 
@@ -109,8 +132,9 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
       case "--tabs":
         options.tabs = true;
         break;
-      case "--no-deep":
-        options.deep = false;
+      case "--sort-from":
+        i++;
+        options.sortFrom = parseInt(args[i], 10) || 0;
         break;
       case "--ignore":
         i++;
@@ -146,7 +170,7 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
 
 async function processFile(
   file: string,
-  options: Options
+  options: ProcessOptions
 ): Promise<Result> {
   try {
     const content = await readFile(file);
@@ -175,8 +199,8 @@ async function processFile(
       };
     }
 
-    // Sort keys
-    const sorted = options.deep ? sortKeys(parsed) : sortKeysShallow(parsed);
+    // Sort keys with sortFrom depth
+    const sorted = sortKeysFromDepth(parsed, options.sortFrom);
 
     // Format
     const formatted = formatJson(sorted, {
@@ -236,7 +260,7 @@ function printResult(result: Result, quiet: boolean): void {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const { options, files: patterns } = parseArgs(args);
+  const { options, files: cliPatterns } = parseArgs(args);
 
   if (options.help) {
     printHelp();
@@ -248,27 +272,54 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  if (patterns.length === 0) {
-    console.error("Error: No files specified");
-    console.error('Run "sort-json --help" for usage');
-    process.exit(1);
-  }
+  // Load config file
+  const config: Config = await loadConfig();
+
+  // Determine patterns: CLI args override config
+  const patterns = cliPatterns.length > 0 ? cliPatterns : config.include ?? ["**/*.json"];
+
+  // Combine ignore patterns: CLI + config
+  const ignorePatterns = [...options.ignore, ...(config.ignore ?? [])];
 
   // Expand glob patterns
   const files = await expandGlob(patterns, {
-    ignore: options.ignore,
+    ignore: ignorePatterns,
     respectGitignore: options.respectGitignore,
   });
 
   if (files.length === 0) {
-    console.error("Error: No files found matching the patterns");
+    if (cliPatterns.length === 0) {
+      console.error("Error: No files found. Create .sortjsonrc.json or specify files.");
+    } else {
+      console.error("Error: No files found matching the patterns");
+    }
     process.exit(1);
   }
 
   // Process files
   const results: Result[] = [];
   for (const file of files) {
-    const result = await processFile(file, options);
+    // Get file-specific config
+    const fileConfig = getFileConfig(file, config);
+
+    // Skip if file is marked as ignored in config
+    if (fileConfig.ignore) {
+      continue;
+    }
+
+    // Determine sortFrom: CLI > file config > global config
+    const sortFrom = options.sortFrom ?? fileConfig.sortFrom;
+
+    const processOptions: ProcessOptions = {
+      check: options.check,
+      write: options.write,
+      force: options.force,
+      indent: options.indent,
+      tabs: options.tabs,
+      sortFrom,
+    };
+
+    const result = await processFile(file, processOptions);
     results.push(result);
     printResult(result, options.quiet);
   }

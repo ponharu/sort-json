@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "title": "sort-json configuration",
+  "description": "Configuration file for @ponharu/sort-json",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema URL",
+      "type": "string"
+    },
+    "include": {
+      "default": [
+        "**/*.json"
+      ],
+      "description": "Glob patterns for files to include",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ignore": {
+      "default": [],
+      "description": "Glob patterns for files to ignore",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sortFrom": {
+      "minimum": 0,
+      "default": 1,
+      "description": "Depth to start sorting from (0 = root, 1 = first level children, etc.)",
+      "type": "integer"
+    },
+    "files": {
+      "description": "Per-file configuration overrides (glob pattern -> config)",
+      "type": "object",
+      "patternProperties": {
+        "^(.*)$": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "sortFrom": {
+              "minimum": 0,
+              "description": "Depth to start sorting from for this file pattern",
+              "type": "integer"
+            },
+            "ignore": {
+              "default": false,
+              "description": "Whether to ignore files matching this pattern",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}
