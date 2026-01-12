@@ -5,12 +5,7 @@
  */
 
 import { readFile, writeFile, expandGlob } from "./io.js";
-import {
-  sortKeysFromDepth,
-  formatJson,
-  detectJsonc,
-  stripComments,
-} from "./sort.js";
+import { sortKeysFromDepth, formatJson, detectJsonc, stripComments } from "./sort.js";
 import { loadConfig, getFileConfig, type Config } from "./config.js";
 import { createRequire } from "module";
 
@@ -78,9 +73,8 @@ Config file (.sortjsonrc.json):
   {
     "include": ["**/*.json"],
     "ignore": ["drizzle/migrations/**"],
-    "sortFrom": 0,
+    "sortFrom": 1,
     "files": {
-      "package.json": { "sortFrom": 1 },
       "data/**/*.json": { "sortFrom": 0 }
     }
   }
@@ -176,10 +170,7 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
   return { options, files };
 }
 
-async function processFile(
-  file: string,
-  options: ProcessOptions
-): Promise<Result> {
+async function processFile(file: string, options: ProcessOptions): Promise<Result> {
   try {
     const content = await readFile(file);
 
@@ -257,7 +248,7 @@ function printResult(
   result: Result,
   quiet: boolean,
   verbose: boolean,
-  verboseInfo?: { sortFrom: number; sortOrder?: string[]; matchedPattern?: string }
+  verboseInfo?: { sortFrom: number; sortOrder?: string[]; matchedPattern?: string },
 ): void {
   if (quiet && result.status === "success") {
     return;
@@ -301,8 +292,7 @@ async function main(): Promise<void> {
   const config: Config = await loadConfig();
 
   // Determine patterns: CLI args override config
-  const patterns =
-    cliPatterns.length > 0 ? cliPatterns : config.include ?? ["**/*.json"];
+  const patterns = cliPatterns.length > 0 ? cliPatterns : (config.include ?? ["**/*.json"]);
 
   // Combine ignore patterns: CLI + config
   const ignorePatterns = [...options.ignore, ...(config.ignore ?? [])];
@@ -315,9 +305,7 @@ async function main(): Promise<void> {
 
   if (files.length === 0) {
     if (cliPatterns.length === 0) {
-      console.error(
-        "Error: No files found. Create .sortjsonrc.json or specify files."
-      );
+      console.error("Error: No files found. Create .sortjsonrc.json or specify files.");
     } else {
       console.error("Error: No files found matching the patterns");
     }
@@ -368,8 +356,7 @@ async function main(): Promise<void> {
     const parts: string[] = [];
     if (successCount > 0) parts.push(`${successCount} sorted`);
     if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
-    if (errorCount > 0)
-      parts.push(`${errorCount} error${errorCount > 1 ? "s" : ""}`);
+    if (errorCount > 0) parts.push(`${errorCount} error${errorCount > 1 ? "s" : ""}`);
     if (changedCount > 0) parts.push(`${changedCount} not sorted`);
     console.log(parts.join(", "));
   }

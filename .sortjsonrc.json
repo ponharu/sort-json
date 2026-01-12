@@ -1,0 +1,36 @@
+{
+  "$schema": "./schema.json",
+  "include": [
+    "**/*.json"
+  ],
+  "ignore": [
+    "node_modules/**",
+    "dist/**"
+  ],
+  "files": {
+    "package.json": {
+      "sortOrder": [
+        "name",
+        "version",
+        "description",
+        "keywords",
+        "license",
+        "author",
+        "repository",
+        "homepage",
+        "bugs",
+        "type",
+        "main",
+        "types",
+        "exports",
+        "bin",
+        "files",
+        "engines",
+        "scripts",
+        "dependencies",
+        "devDependencies",
+        "peerDependencies"
+      ]
+    }
+  }
+}

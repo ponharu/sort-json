@@ -13,20 +13,16 @@ export const DEFAULT_CONFIG: Required<Omit<Config, "$schema" | "files">> & {
 } = {
   include: ["**/*.json"],
   ignore: [],
-  sortFrom: 0,
+  sortFrom: 1,
   files: {},
 };
 
-const CONFIG_FILE_NAMES = [
-  ".sortjsonrc.json",
-  ".sortjsonrc",
-  "sortjson.config.json",
-];
+const CONFIG_FILE_NAMES = [".sortjsonrc.json", ".sortjsonrc", "sortjson.config.json"];
 
 export class ConfigValidationError extends Error {
   constructor(
     message: string,
-    public errors: Array<{ path: string; message: string }>
+    public errors: Array<{ path: string; message: string }>,
   ) {
     super(message);
     this.name = "ConfigValidationError";
@@ -50,7 +46,7 @@ export async function loadConfig(): Promise<Config> {
         }));
         throw new ConfigValidationError(
           `Invalid config in ${fileName}: ${errors[0]?.message ?? "unknown error"}`,
-          errors
+          errors,
         );
       }
 
@@ -151,8 +147,7 @@ function getPatternSpecificity(pattern: string): number {
 
   // Single * is more specific than **
   const doubleStarCount = (pattern.match(/\*\*/g) || []).length;
-  const singleStarCount =
-    (pattern.match(/\*/g) || []).length - doubleStarCount * 2;
+  const singleStarCount = (pattern.match(/\*/g) || []).length - doubleStarCount * 2;
   score -= doubleStarCount * 5;
   score += singleStarCount * 1;
 

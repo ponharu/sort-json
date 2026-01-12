@@ -3,13 +3,15 @@
  * Uses Bun APIs when available, falls back to Node.js fs.
  */
 
-declare const Bun: {
-  file(path: string): { text(): Promise<string>; json(): Promise<unknown> };
-  write(path: string, content: string): Promise<number>;
-  Glob: new (pattern: string) => {
-    scan(cwd: string): AsyncIterable<string>;
-  };
-} | undefined;
+declare const Bun:
+  | {
+      file(path: string): { text(): Promise<string>; json(): Promise<unknown> };
+      write(path: string, content: string): Promise<number>;
+      Glob: new (pattern: string) => {
+        scan(cwd: string): AsyncIterable<string>;
+      };
+    }
+  | undefined;
 
 /**
  * Checks if running in Bun runtime.
@@ -79,7 +81,7 @@ export interface ExpandGlobOptions {
  */
 export async function expandGlob(
   patterns: string[],
-  options: ExpandGlobOptions = {}
+  options: ExpandGlobOptions = {},
 ): Promise<string[]> {
   const { ignore = [], respectGitignore = true } = options;
 
@@ -119,7 +121,7 @@ export async function expandGlob(
   }
 
   // Remove duplicates and sort
-  return [...new Set(results)].sort();
+  return [...new Set(results)].toSorted();
 }
 
 /**
@@ -128,10 +130,7 @@ export async function expandGlob(
 function shouldIgnore(file: string, ignorePatterns: string[]): boolean {
   for (const pattern of ignorePatterns) {
     // Simple glob matching for common patterns
-    const regexPattern = pattern
-      .replace(/\*\*/g, ".*")
-      .replace(/\*/g, "[^/]*")
-      .replace(/\?/g, ".");
+    const regexPattern = pattern.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".");
     if (new RegExp(`^${regexPattern}$`).test(file)) {
       return true;
     }

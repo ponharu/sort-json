@@ -12,8 +12,8 @@ export function sortKeys(value: unknown): unknown {
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, val]) => [key, sortKeys(val)])
+        .toSorted(([a], [b]) => a.localeCompare(b))
+        .map(([key, val]) => [key, sortKeys(val)]),
     );
   }
 
@@ -25,9 +25,7 @@ export function sortKeys(value: unknown): unknown {
  */
 export function sortKeysShallow(value: unknown): unknown {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-    return Object.fromEntries(
-      Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
-    );
+    return Object.fromEntries(Object.entries(value).toSorted(([a], [b]) => a.localeCompare(b)));
   }
 
   return value;
@@ -47,7 +45,7 @@ export interface SortOptions {
 export function sortKeysFromDepth(
   value: unknown,
   options: SortOptions | number,
-  currentDepth: number = 0
+  currentDepth: number = 0,
 ): unknown {
   // Support legacy signature (sortFrom as number)
   const { sortFrom, sortOrder } =
@@ -55,7 +53,7 @@ export function sortKeysFromDepth(
 
   if (Array.isArray(value)) {
     return value.map((item) =>
-      sortKeysFromDepth(item, { sortFrom, sortOrder: undefined }, currentDepth)
+      sortKeysFromDepth(item, { sortFrom, sortOrder: undefined }, currentDepth),
     );
   }
 
@@ -69,7 +67,7 @@ export function sortKeysFromDepth(
       if (currentDepth === 0 && sortOrder && sortOrder.length > 0) {
         processedEntries = sortEntriesWithCustomOrder(entries, sortOrder);
       } else {
-        processedEntries = entries.sort(([a], [b]) => a.localeCompare(b));
+        processedEntries = entries.toSorted(([a], [b]) => a.localeCompare(b));
       }
     } else {
       processedEntries = entries;
@@ -79,7 +77,7 @@ export function sortKeysFromDepth(
       processedEntries.map(([key, val]) => [
         key,
         sortKeysFromDepth(val, { sortFrom, sortOrder: undefined }, currentDepth + 1),
-      ])
+      ]),
     );
   }
 
@@ -92,11 +90,11 @@ export function sortKeysFromDepth(
  */
 function sortEntriesWithCustomOrder(
   entries: [string, unknown][],
-  sortOrder: string[]
+  sortOrder: string[],
 ): [string, unknown][] {
   const orderMap = new Map(sortOrder.map((key, index) => [key, index]));
 
-  return entries.sort(([a], [b]) => {
+  return entries.toSorted(([a], [b]) => {
     const aIndex = orderMap.get(a);
     const bIndex = orderMap.get(b);
 
@@ -126,7 +124,7 @@ function sortEntriesWithCustomOrder(
  */
 export function formatJson(
   value: unknown,
-  options: { indent?: number; useTabs?: boolean } = {}
+  options: { indent?: number; useTabs?: boolean } = {},
 ): string {
   const { indent = 2, useTabs = false } = options;
   const indentStr = useTabs ? "\t" : " ".repeat(indent);

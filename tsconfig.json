@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "lib": [
-      "ES2022"
+      "ES2023"
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -14,7 +14,7 @@
     "rootDir": "./src",
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2022",
+    "target": "ES2023",
     "types": [
       "bun"
     ]

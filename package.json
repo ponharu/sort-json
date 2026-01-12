@@ -3,15 +3,15 @@
   "version": "0.3.0",
   "description": "Fast JSON key sorter - Bun-optimized, Node.js compatible",
   "keywords": [
-    "json",
-    "sort",
-    "formatter",
-    "cli",
     "bun",
+    "cli",
     "fast",
-    "lint",
+    "formatter",
+    "husky",
+    "json",
     "lefthook",
-    "husky"
+    "lint",
+    "sort"
   ],
   "license": "MIT",
   "author": "ponharu",
@@ -46,8 +46,12 @@
   "scripts": {
     "build": "bun run generate:schema && bun build ./src/cli.ts --outdir ./dist --target node --format esm && bun run build:types",
     "build:types": "bun x tsc --emitDeclarationOnly --declaration --outDir dist",
+    "check": "bun run format && bun run typecheck && bun run lint",
     "dev": "bun run ./src/cli.ts",
+    "format": "bun run ./src/cli.ts && bun x oxfmt . --write",
     "generate:schema": "bun run ./scripts/generate-schema.ts",
+    "lint": "bun x oxlint .",
+    "prepare": "lefthook install || true",
     "prepublishOnly": "bun run build",
     "test": "bun test",
     "typecheck": "bun x tsc --noEmit"
@@ -59,6 +63,9 @@
   "devDependencies": {
     "@types/bun": "^1.2.4",
     "@types/node": "^22.15.21",
+    "lefthook": "2.0.13",
+    "oxfmt": "0.21.0",
+    "oxlint": "1.36.0",
     "typescript": "^5.8.3"
   }
 }

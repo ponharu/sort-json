@@ -1,11 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  sortKeys,
-  sortKeysShallow,
-  formatJson,
-  detectJsonc,
-  stripComments,
-} from "../src/sort";
+import { sortKeys, sortKeysShallow, formatJson, detectJsonc, stripComments } from "../src/sort";
 
 describe("sortKeys", () => {
   it("should sort object keys alphabetically", () => {
@@ -27,7 +21,10 @@ describe("sortKeys", () => {
   });
 
   it("should preserve array order but sort objects inside arrays", () => {
-    const input = [{ z: 1, a: 2 }, { c: 3, b: 4 }];
+    const input = [
+      { z: 1, a: 2 },
+      { c: 3, b: 4 },
+    ];
     const result = sortKeys(input) as Array<Record<string, number>>;
 
     expect(result.length).toBe(2);
