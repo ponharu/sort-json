@@ -25,6 +25,8 @@ interface Options {
   quiet: boolean;
   help: boolean;
   version: boolean;
+  ignore: string[];
+  respectGitignore: boolean;
 }
 
 interface Result {
@@ -51,6 +53,8 @@ Options:
   -i, --indent <n>     Indentation width (default: 2)
   --tabs               Use tabs for indentation
   --no-deep            Sort top-level keys only
+  --ignore <pattern>   Ignore files matching pattern (can be used multiple times)
+  --no-gitignore       Don't respect .gitignore file
   -q, --quiet          Suppress output
   -h, --help           Show this help message
   -v, --version        Show version
@@ -74,6 +78,8 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
     quiet: false,
     help: false,
     version: false,
+    ignore: [],
+    respectGitignore: true,
   };
   const files: string[] = [];
 
@@ -105,6 +111,15 @@ function parseArgs(args: string[]): { options: Options; files: string[] } {
         break;
       case "--no-deep":
         options.deep = false;
+        break;
+      case "--ignore":
+        i++;
+        if (args[i]) {
+          options.ignore.push(args[i]);
+        }
+        break;
+      case "--no-gitignore":
+        options.respectGitignore = false;
         break;
       case "-q":
       case "--quiet":
@@ -240,7 +255,10 @@ async function main(): Promise<void> {
   }
 
   // Expand glob patterns
-  const files = await expandGlob(patterns);
+  const files = await expandGlob(patterns, {
+    ignore: options.ignore,
+    respectGitignore: options.respectGitignore,
+  });
 
   if (files.length === 0) {
     console.error("Error: No files found matching the patterns");

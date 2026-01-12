@@ -44,10 +44,52 @@ export async function writeFile(path: string, content: string): Promise<void> {
 }
 
 /**
+ * Reads .gitignore file and returns ignore patterns.
+ */
+export async function readGitignore(): Promise<string[]> {
+  try {
+    const content = await readFile(".gitignore");
+    return content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((pattern) => {
+        // Convert gitignore patterns to glob patterns
+        if (pattern.startsWith("/")) {
+          return pattern.slice(1) + "/**";
+        }
+        if (!pattern.includes("/")) {
+          return "**/" + pattern + "/**";
+        }
+        return pattern + "/**";
+      });
+  } catch {
+    return [];
+  }
+}
+
+export interface ExpandGlobOptions {
+  ignore?: string[];
+  respectGitignore?: boolean;
+}
+
+/**
  * Expands glob patterns to file paths.
  * Uses Bun.Glob when available, falls back to fast-glob.
  */
-export async function expandGlob(patterns: string[]): Promise<string[]> {
+export async function expandGlob(
+  patterns: string[],
+  options: ExpandGlobOptions = {}
+): Promise<string[]> {
+  const { ignore = [], respectGitignore = true } = options;
+
+  // Combine ignore patterns
+  let ignorePatterns = [...ignore];
+  if (respectGitignore) {
+    const gitignorePatterns = await readGitignore();
+    ignorePatterns = [...ignorePatterns, ...gitignorePatterns];
+  }
+
   const results: string[] = [];
 
   for (const pattern of patterns) {
@@ -60,13 +102,17 @@ export async function expandGlob(patterns: string[]): Promise<string[]> {
     if (isBun()) {
       const glob = new Bun!.Glob(pattern);
       for await (const file of glob.scan(".")) {
-        results.push(file);
+        // Apply ignore patterns manually for Bun
+        if (!shouldIgnore(file, ignorePatterns)) {
+          results.push(file);
+        }
       }
     } else {
       const fg = await import("fast-glob");
       const files = await fg.default(pattern, {
         dot: true,
         onlyFiles: true,
+        ignore: ignorePatterns,
       });
       results.push(...files);
     }
@@ -74,6 +120,27 @@ export async function expandGlob(patterns: string[]): Promise<string[]> {
 
   // Remove duplicates and sort
   return [...new Set(results)].sort();
+}
+
+/**
+ * Checks if a file should be ignored based on ignore patterns.
+ */
+function shouldIgnore(file: string, ignorePatterns: string[]): boolean {
+  for (const pattern of ignorePatterns) {
+    // Simple glob matching for common patterns
+    const regexPattern = pattern
+      .replace(/\*\*/g, ".*")
+      .replace(/\*/g, "[^/]*")
+      .replace(/\?/g, ".");
+    if (new RegExp(`^${regexPattern}$`).test(file)) {
+      return true;
+    }
+    // Also check if the file path contains the ignore pattern directory
+    if (pattern.endsWith("/**") && file.startsWith(pattern.slice(0, -3))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
