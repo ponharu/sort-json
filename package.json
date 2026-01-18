@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@types/bun": "^1.2.4",
-    "@types/node": "^22.15.21",
+    "@types/node": "^25.0.0",
     "lefthook": "2.0.13",
     "oxfmt": "0.21.0",
     "oxlint": "1.36.0",
