@@ -64,8 +64,8 @@
     "@types/bun": "^1.2.4",
     "@types/node": "^25.0.0",
     "lefthook": "2.1.9",
-    "oxfmt": "0.54.0",
-    "oxlint": "1.69.0",
+    "oxfmt": "0.55.0",
+    "oxlint": "1.70.0",
     "typescript": "^5.8.3"
   }
 }
