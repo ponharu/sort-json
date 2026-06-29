@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v4
+      - uses: actions/checkout@v7.0.0
+      - uses: jdx/mise-action@v4.2.0
         with:
           install: true
           cache: true
