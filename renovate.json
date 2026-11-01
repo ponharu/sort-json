@@ -3,30 +3,49 @@
   "dependencyDashboardAutoclose": true,
   "extends": [
     "config:recommended",
-    ":automergePr",
-    ":dependencyDashboard", 
+    ":dependencyDashboard",
+    ":approveMajorUpdates",
     ":semanticCommits",
-    ":maintainLockFilesWeekly",
-    "group:allNonMajor"
+    "helpers:pinGitHubActionDigests"
   ],
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "packageRules": [
     {
-      "matchDatasources": ["npm"],
-      "minimumReleaseAge": "7 days"
-    },
-    {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true
-    },
-    {
-      "matchUpdateTypes": ["major"],
       "automerge": false,
-      "reviewers": ["ponharu"]
+      "description": "Require manual review before merging dependency updates",
+      "matchPackageNames": [
+        "*"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "reviewers": [
+        "ponharu"
+      ]
     }
   ],
   "rangeStrategy": "pin",
-  "schedule": ["after 10pm every weekday", "before 3am every weekday"],
+  "schedule": [
+    "after 10pm every weekday",
+    "before 3am every weekday"
+  ],
   "separateMultipleMajor": true,
-  "timezone": "Asia/Tokyo"
+  "timezone": "Asia/Tokyo",
+  "minimumReleaseAge": "7 days",
+  "vulnerabilityAlerts": {
+    "automerge": false,
+    "dependencyDashboardApproval": false,
+    "enabled": true,
+    "minimumReleaseAge": "0 days"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 4am on monday"
+    ]
+  }
 }

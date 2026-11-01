@@ -5,7 +5,8 @@
     "dist"
   ],
   "rules": {
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
+    "unicorn/no-array-sort": "off"
   },
   "categories": {
     "correctness": "error",

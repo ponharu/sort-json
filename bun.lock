@@ -6,7 +6,7 @@
       "name": "@ponharu/sort-json",
       "dependencies": {
         "@sinclair/typebox": "0.34.52",
-        "fast-glob": "^3.3.3",
+        "fast-glob": "3.3.3",
       },
       "devDependencies": {
         "@types/bun": "^1.2.4",

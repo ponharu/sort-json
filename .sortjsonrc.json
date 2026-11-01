@@ -5,7 +5,8 @@
   ],
   "ignore": [
     "node_modules/**",
-    "dist/**"
+    "dist/**",
+    "schema.json"
   ],
   "files": {
     "package.json": {
