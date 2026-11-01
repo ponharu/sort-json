@@ -1,12 +1,7 @@
 {
   "$schema": "./schema.json",
-  "include": [
-    "**/*.json"
-  ],
-  "ignore": [
-    "node_modules/**",
-    "dist/**"
-  ],
+  "include": ["**/*.json"],
+  "ignore": ["node_modules/**", "dist/**", "schema.json"],
   "files": {
     "package.json": {
       "sortOrder": [

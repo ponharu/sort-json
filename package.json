@@ -44,21 +44,23 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "bun run generate:schema && bun build ./src/cli.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build": "bun run generate:schema && bun build ./src/cli.ts ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
     "build:types": "bun x tsc --emitDeclarationOnly --declaration --outDir dist",
-    "check": "bun run format && bun run typecheck && bun run lint",
+    "check": "bun run format:check && bun run typecheck && bun run lint",
     "dev": "bun run ./src/cli.ts",
     "format": "bun run ./src/cli.ts && bun x oxfmt . --write",
+    "format:check": "bun run ./src/cli.ts --check && oxfmt --check .",
     "generate:schema": "bun run ./scripts/generate-schema.ts",
     "lint": "bun x oxlint .",
     "prepare": "lefthook install || true",
     "prepublishOnly": "bun run build",
     "test": "bun test",
+    "test:package": "bun run build && bun scripts/test-package.ts",
     "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {
     "@sinclair/typebox": "0.34.52",
-    "fast-glob": "^3.3.3"
+    "fast-glob": "3.3.3"
   },
   "devDependencies": {
     "@types/bun": "^1.2.4",
@@ -67,5 +69,6 @@
     "oxfmt": "0.74.0",
     "oxlint": "1.89.0",
     "typescript": "^7.0.0"
-  }
+  },
+  "packageManager": "bun@1.4.4"
 }

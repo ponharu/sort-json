@@ -121,7 +121,7 @@ export async function expandGlob(
   }
 
   // Remove duplicates and sort
-  return [...new Set(results)].toSorted();
+  return [...new Set(results)].sort();
 }
 
 /**
