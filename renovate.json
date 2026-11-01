@@ -8,31 +8,20 @@
     ":semanticCommits",
     "helpers:pinGitHubActionDigests"
   ],
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "packageRules": [
     {
       "automerge": false,
       "description": "Require manual review before merging dependency updates",
-      "matchPackageNames": [
-        "*"
-      ]
+      "matchPackageNames": ["*"]
     },
     {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "reviewers": [
-        "ponharu"
-      ]
+      "matchUpdateTypes": ["major"],
+      "reviewers": ["ponharu"]
     }
   ],
   "rangeStrategy": "pin",
-  "schedule": [
-    "after 10pm every weekday",
-    "before 3am every weekday"
-  ],
+  "schedule": ["after 10pm every weekday", "before 3am every weekday"],
   "separateMultipleMajor": true,
   "timezone": "Asia/Tokyo",
   "minimumReleaseAge": "7 days",
@@ -44,8 +33,6 @@
   },
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": [
-      "before 4am on monday"
-    ]
+    "schedule": ["before 4am on monday"]
   }
 }

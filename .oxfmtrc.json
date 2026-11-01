@@ -2,10 +2,6 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "printWidth": 100,
   "singleQuote": false,
-  "ignorePatterns": [
-    "node_modules",
-    "dist",
-    "schema.json"
-  ],
+  "ignorePatterns": ["node_modules", "dist", "schema.json"],
   "sortPackageJson": false
 }

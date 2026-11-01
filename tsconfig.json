@@ -4,9 +4,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "./dist",
@@ -15,15 +13,8 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2023",
-    "types": [
-      "bun"
-    ]
+    "types": ["bun"]
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "include": [
-    "src/**/*"
-  ]
+  "exclude": ["node_modules", "dist"],
+  "include": ["src/**/*"]
 }

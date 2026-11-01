@@ -7,8 +7,11 @@ pre-commit:
 
     sort-json:
       glob: "*.json"
-      exclude: "package-lock.json|bun.lock"
-      run: bun run ./src/cli.ts {staged_files}
+      exclude: "package-lock.json|bun.lock|schema.json"
+      run: |
+        set -e
+        bun run ./src/cli.ts {staged_files}
+        bun x oxfmt {staged_files} --write
       stage_fixed: true
 
     oxfmt:
